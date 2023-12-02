@@ -4,7 +4,7 @@ import {Loader, Card, FormField} from '../components'
 // Custom functional component
 const RenderCards = ({data, title}) => {
   if(data?.length > 0) {
-    return data.map((post) => <Card key={post._id} {...post}/>)
+    return data.map((post) => <Card key={post?._id} {...post}/>)
   }
 
   return (
@@ -15,9 +15,58 @@ const RenderCards = ({data, title}) => {
 }
 
 const Home = () => {
-  const [loading, isLoading] = useState(false);
-  const [allPosts, setAllPosts] = useState(null);
-  const [searchText, setSearchText] = useState('test');
+  const [loading, setLoading] = useState(false);
+  const [allPosts, setAllPosts] = useState([{}]);
+  const [searchText, setSearchText] = useState('');
+  const [searchedResults, setSearchedResults] = useState(null);
+  const [searchTimeout, setSearchTimeout] = useState(null)
+
+ 
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      setLoading(true);
+      try{
+        const response = await fetch('http://localhost:8080/api/v1/post',{
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+
+        if(response.ok){
+          // console.log(response);
+          const result = await response.json();
+          setAllPosts(result.data.reverse());
+        }
+      }catch(error) { 
+        console.log(error);
+      }finally{
+        setLoading(false);
+      }
+    }
+
+    fetchPosts();
+  },[]);
+
+  const handleSearch = (e) =>{
+
+    // Clear timeout when we start to type something new
+    clearTimeout(searchTimeout);
+
+    setSearchText(e.target.value);
+
+    setSearchTimeout(
+      setTimeout(() => {
+        const searchResults = allPosts.filter( (post) => {
+          post.name.toLowerCase().includes(searchText.toLowerCase()) || post.prompt.toLowerCase().includes(searchText.toLowerCase());
+        });
+        console.log(searchResults);
+        setSearchedResults(searchResults);
+      },500)
+      
+    );
+  }
 
   return (
     <section className='max-w-7xl mx-auto'>
@@ -32,7 +81,14 @@ const Home = () => {
       </div>
       {/* Form Field */}
       <div className='mt-16 '>
-        <FormField />
+        <FormField 
+          labelName="Search posts"
+          type='text'
+          name='text'
+          placeholder='Search posts'
+          value={searchText}
+          handleChange={handleSearch}
+        />
       </div>
       <div className='mt-10'>
         {loading ? (
@@ -53,12 +109,12 @@ const Home = () => {
               >
                 {searchText ? (
                   <RenderCards 
-                    data={[]}
+                    data={searchedResults}
                     title='No search results found'
                   />
                 ): (
                   <RenderCards 
-                    data={[]}
+                    data={allPosts}
                     title='No posts found'
                   />
                 )}
