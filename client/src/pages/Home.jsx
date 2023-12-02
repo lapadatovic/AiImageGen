@@ -22,7 +22,6 @@ const Home = () => {
   const [searchTimeout, setSearchTimeout] = useState(null)
 
  
-
   useEffect(() => {
     const fetchPosts = async () => {
       setLoading(true);
@@ -49,25 +48,20 @@ const Home = () => {
     fetchPosts();
   },[]);
 
-  const handleSearch = (e) =>{
-
-    // Clear timeout when we start to type something new
+  const handleSearchChange = (e) => {
+    // Clear searchTimeout
     clearTimeout(searchTimeout);
 
     setSearchText(e.target.value);
 
     setSearchTimeout(
       setTimeout(() => {
-        const searchResults = allPosts.filter( (post) => {
-          post.name.toLowerCase().includes(searchText.toLowerCase()) || post.prompt.toLowerCase().includes(searchText.toLowerCase());
-        });
-        console.log(searchResults);
+        const searchResults = allPosts.filter((item) => item.name.toLowerCase().includes(searchText.toLowerCase()) || item.prompt.toLowerCase().includes(searchText.toLowerCase()));
+  
         setSearchedResults(searchResults);
       },500)
-      
     );
   }
-
   return (
     <section className='max-w-7xl mx-auto'>
       <div>
@@ -87,7 +81,7 @@ const Home = () => {
           name='text'
           placeholder='Search posts'
           value={searchText}
-          handleChange={handleSearch}
+          handleChange={handleSearchChange}
         />
       </div>
       <div className='mt-10'>
